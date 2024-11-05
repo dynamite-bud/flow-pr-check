@@ -26,14 +26,13 @@ app.post("/github-webhook", async (req, res) => {
             // Step 2: Retrieve PR File Changes
             const fileChanges = await getPullRequestFiles(owner, repo, number);
 
-            console.dir(">>> File Changes",fileChanges, { depth: null });
+            console.log(">>> File Changes",fileChanges);
             
             // Step 3: Pass Changes to OpenAI for Review
             const reviewText = await analyzeCodeChanges(fileChanges);
             
-            console.log(">>> Review Text",reviewText);
             // Step 4: Post Review as a Comment on the PR
-            // await postPRReview(owner, repo, number, reviewText);
+            await postPRReview(owner, repo, number, reviewText);
 
             console.log("Review posted successfully on PR #" + number);
             res.status(200).send("Review posted");
@@ -78,7 +77,7 @@ async function analyzeCodeChanges(fileChanges) {
         ],
     })
 
-    return response.choices[0].text;
+    return response.choices[0].message.content;
 }
 
 async function postPRReview(owner, repo, pull_number, reviewText) {
