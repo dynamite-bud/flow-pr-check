@@ -17,6 +17,7 @@ app.post("/github-webhook", async (req, res) => {
         console.dir(">>> Request Body",req.body, { depth: null });
         
         const { number,repository } = req.body;
+        console.log("Processing PR #" + number);
         
         const owner = repository.owner.login;
         const repo = repository.name;
@@ -67,11 +68,14 @@ async function analyzeCodeChanges(fileChanges) {
         .map(file => `File: ${file.filename}\nDiff:\n${file.patch}`)
         .join("\n\n");
 
-    const response = await openai.Completion.create({
-        model: "gpt-4",
-        prompt: `Review the following code changes and write a markdown summary for a PR:\n\n${changesText}`,
-        max_tokens: 1500,
-    });
+    const response = await openai.chat.completions.create({
+        model:"gpt-4o",
+        messages: [
+            {role: "system", content: "You are a code reviewer reviewing a PR with some code changes."},
+            {role: "user", content: changesText},
+            {role: "system", content: "Write a markdown summary for the PR."},
+        ],
+    })
 
     return response.choices[0].text;
 }
