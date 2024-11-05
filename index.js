@@ -14,10 +14,10 @@ app.post("/github-webhook", async (req, res) => {
     const event = req.headers["x-github-event"];
 
     if (event === "pull_request" && req.body.action === "opened") {
-        console.dir(">>> Request Body",req.body, { depth: null });
         
         const { number,repository } = req.body;
         console.log("Processing PR #" + number);
+        console.log("Repository:", repository.full_name);
         
         const owner = repository.owner.login;
         const repo = repository.name;
@@ -31,8 +31,9 @@ app.post("/github-webhook", async (req, res) => {
             // Step 3: Pass Changes to OpenAI for Review
             const reviewText = await analyzeCodeChanges(fileChanges);
             
+            console.log(">>> Review Text",reviewText);
             // Step 4: Post Review as a Comment on the PR
-            await postPRReview(owner, repo, number, reviewText);
+            // await postPRReview(owner, repo, number, reviewText);
 
             console.log("Review posted successfully on PR #" + number);
             res.status(200).send("Review posted");
