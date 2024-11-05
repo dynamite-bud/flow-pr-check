@@ -14,6 +14,8 @@ app.post("/github-webhook", async (req, res) => {
     const event = req.headers["x-github-event"];
 
     if (event === "pull_request" && req.body.action === "opened") {
+        console.dir(req.body, { depth: null });
+        
         const { pull_request } = req.body;
         const { number, repository } = pull_request;
         
