@@ -14,7 +14,7 @@ app.post("/github-webhook", async (req, res) => {
     const event = req.headers["x-github-event"];
 
     if (event === "pull_request" && req.body.action === "opened") {
-        console.dir(req.body, { depth: null });
+        console.dir(">>> Request Body",req.body, { depth: null });
         
         const { pull_request } = req.body;
         const { number, repository } = pull_request;
@@ -25,6 +25,8 @@ app.post("/github-webhook", async (req, res) => {
         try {
             // Step 2: Retrieve PR File Changes
             const fileChanges = await getPullRequestFiles(owner, repo, number);
+
+            console.dir(">>> File Changes",fileChanges, { depth: null });
             
             // Step 3: Pass Changes to OpenAI for Review
             const reviewText = await analyzeCodeChanges(fileChanges);
@@ -39,6 +41,7 @@ app.post("/github-webhook", async (req, res) => {
             res.status(500).send("Internal Server Error");
         }
     } else {
+        console.log("Ignoring event:", event);
         res.sendStatus(200);
     }
 });
