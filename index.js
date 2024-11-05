@@ -14,10 +14,10 @@ app.post("/github-webhook", async (req, res) => {
     const event = req.headers["x-github-event"];
 
     if (event === "pull_request" && req.body.action === "opened") {
-        console.dir(">>> Request Body",req.body, { depth: null });
         
-        const { pull_request } = req.body;
-        const { number, repository } = pull_request;
+        const { number,repository } = req.body;
+        console.log("Processing PR #" + number);
+        console.log("Repository:", repository.full_name);
         
         const owner = repository.owner.login;
         const repo = repository.name;
@@ -26,7 +26,7 @@ app.post("/github-webhook", async (req, res) => {
             // Step 2: Retrieve PR File Changes
             const fileChanges = await getPullRequestFiles(owner, repo, number);
 
-            console.dir(">>> File Changes",fileChanges, { depth: null });
+            console.log(">>> File Changes",fileChanges);
             
             // Step 3: Pass Changes to OpenAI for Review
             const reviewText = await analyzeCodeChanges(fileChanges);
@@ -68,13 +68,16 @@ async function analyzeCodeChanges(fileChanges) {
         .map(file => `File: ${file.filename}\nDiff:\n${file.patch}`)
         .join("\n\n");
 
-    const response = await openai.Completion.create({
-        model: "gpt-4",
-        prompt: `Review the following code changes and write a markdown summary for a PR:\n\n${changesText}`,
-        max_tokens: 1500,
-    });
+    const response = await openai.chat.completions.create({
+        model:"gpt-4o",
+        messages: [
+            {role: "system", content: "You are a code reviewer reviewing a PR with some code changes."},
+            {role: "user", content: changesText},
+            {role: "system", content: "Write a markdown summary for the PR."},
+        ],
+    })
 
-    return response.choices[0].text;
+    return response.choices[0].message.content;
 }
 
 async function postPRReview(owner, repo, pull_number, reviewText) {
