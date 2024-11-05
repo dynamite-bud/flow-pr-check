@@ -16,8 +16,7 @@ app.post("/github-webhook", async (req, res) => {
     if (event === "pull_request" && req.body.action === "opened") {
         console.dir(">>> Request Body",req.body, { depth: null });
         
-        const { pull_request } = req.body;
-        const { number, repository } = pull_request;
+        const { number,repository } = req.body;
         
         const owner = repository.owner.login;
         const repo = repository.name;
